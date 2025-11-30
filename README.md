@@ -1,2 +1,2 @@
 # hitsterBE
-Belgische versie van hitster. Door Jeroen Tromp
+Belgische versie van hitster, oor Jeroen Tromp
