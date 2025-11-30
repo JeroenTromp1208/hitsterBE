@@ -3,30 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Even openen…</title>
+  <title>Start…</title>
   <style>
-    html,body{
-      height:100%;
-      margin:0;
-      font-family:system-ui, Arial, sans-serif;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:#ffffff;
-      color:#222;
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, Arial, sans-serif;
+      overflow: hidden;
     }
-    #msg{
-      font-size:18px;
-      text-align:center;
-      padding:20px;
+
+    #container {
+      text-align: center;
+      font-size: 32px;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    .hidden {
+      opacity: 0 !important;
+    }
+
+    .count {
+      font-size: 70px;
+      margin-top: 20px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div id="msg">Even openen…</div>
+  <div id="container">
+    <div>No Spoilers…</div>
+    <div class="count" id="count">3</div>
+  </div>
 
   <script>
-    // Lees track ID uit querystring: ?track=ID
     function getParam(name) {
       const url = new URL(window.location.href);
       return url.searchParams.get(name);
@@ -35,52 +51,55 @@
     const id = getParam("track");
 
     if (!id) {
-      document.getElementById("msg").textContent =
-        "Geen nummer opgegeven. Gebruik ?track=TRACKID in de URL.";
+      document.body.innerHTML = `
+        <div style="text-align:center;font-size:20px;padding:20px;color:white;">
+          Geen nummer opgegeven.<br>Gebruik ?track=TRACKID in de URL.
+        </div>`;
       throw new Error("Geen track ID");
     }
 
     const spotifyURI = "spotify:track:" + id;
     const openURL = "https://open.spotify.com/track/" + id;
-    const embedURL = "https://open.spotify.com/embed/track/" + id + "?utm_source=qr";
+    const embedURL = "https://open.spotify.com/embed/track/" + id;
 
-    // Probeer Spotify app te openen
-    function openNativeApp() {
-      window.location = spotifyURI;
-    }
+    let counter = 3;
+    const counterElement = document.getElementById("count");
 
-    // Fallback naar webplayer
-    function openWebplayer() {
-      window.location = openURL;
-    }
+    // Tel af: 3 → 2 → 1 → open Spotify
+    const timer = setInterval(() => {
+      counter--;
+      if (counter === 0) {
+        clearInterval(timer);
 
-    // Laat embed zien + kliklink als alles faalt
-    function showEmbedFallback() {
-      document.body.innerHTML = `
-        <iframe src="${embedURL}"
-                width="0" height="0"
-                style="border:0;opacity:0"></iframe>
-        <div style="padding:20px;font-size:16px;text-align:center">
-          Het openen van de Spotify-app lukte niet.<br>
-          <a href="${openURL}">Klik hier om het nummer in Spotify te openen.</a>
-        </div>`;
-    }
+        // Fade out animatie
+        document.getElementById("container").classList.add("hidden");
 
-    // Open app direct
-    const start = Date.now();
-    openNativeApp();
+        // Na fade → open Spotify app
+        setTimeout(() => {
+          window.location = spotifyURI;
+        }, 400);
 
-    // Als app binnen 1s niet opent → webplayer
-    setTimeout(() => {
-      if (Date.now() - start < 1500) {
-        openWebplayer();
+        // Fallback naar webplayer
+        setTimeout(() => {
+          window.location = openURL;
+        }, 1500);
+
+        // Extra fallback
+        setTimeout(() => {
+          document.body.innerHTML = `
+            <iframe src="${embedURL}"
+                    width="0" height="0"
+                    style="opacity:0;border:0"></iframe>
+            <div style="text-align:center;font-size:20px;color:white;padding:30px;">
+              Het openen van Spotify lukt niet.<br>
+              <a href="${openURL}" style="color:#5af">Klik hier om het nummer te openen.</a>
+            </div>`;
+        }, 3000);
+
+      } else {
+        counterElement.textContent = counter;
       }
-    }, 900);
-
-    // Als browser de webplayer blokkeert → embed tonen na 3s
-    setTimeout(() => {
-      showEmbedFallback();
-    }, 3000);
+    }, 850);
   </script>
 </body>
 </html>
